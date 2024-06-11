@@ -4,6 +4,7 @@ import sys
 import time
 import pytz
 import math
+import cv2
 import random
 import urllib3
 import joblib
@@ -15,6 +16,7 @@ import resources
 import traceback
 import numpy as np
 import mysql.connector
+from PIL import Image
 from datetime import date
 from datetime import datetime
 from tkinter import *
@@ -108,12 +110,24 @@ class Ui_MainWindow(object):
 
     def remove(self):
         self.stackedWidget.setCurrentIndex(2)
-        self.label_4.setStyleSheet("background-color: rgb(18,18,18);")
+        self.label_4.setStyleSheet("QPushButton {\n"
+"    background-color: rgb(18,18,18);\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    border-left: 3px solid rgb(255, 85, 0);\n"
+"    border-right: 3px solid rgb(255, 85, 0);\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(25, 25, 25);\n"
+"}")
+     
         self.lineEdit_5.clear()
         self.lineEdit_6.clear()
         self.tableWidget_exist_5.setRowCount(0)
         self.comboBox_3.setCurrentIndex(0)
-
+        self.user_id = 0
     def deposit(self):
         self.stackedWidget.setCurrentIndex(3)
         self.lineEdit_7.clear()
@@ -669,7 +683,77 @@ GROUP BY
     #function to prevent double click on a pushButton
     def allowClick(self):
         self.pushButton_13.setEnabled(True)
+
+    def call_camera(self):
+        # Initialize the camera
+        cap = cv2.VideoCapture(0)
+
+        while True:
+                # Capture frame-by-frame
+                ret, frame = cap.read()
+
+                # Display the resulting frame
+                cv2.imshow('Press space to capture', frame)
+
+                # Check if space key is pressed
+                if cv2.waitKey(1) & 0xFF == ord(' '):
+                        # Save the image
+                        cv2.imwrite(f'C:\\Users\\Jitendra Jain\\Downloads\\LoanMate\\LoanMate\\images\\{user}.jpg', frame)
+                        break
+
+        # When everything done, release the capture and destroy windows
+        cap.release()
+        cv2.destroyAllWindows()
+
+    def check_image_exists(self,id):
+        # Specify the path to the folder where your images are stored
+        folder_path = 'C:\\Users\\Jitendra Jain\\Downloads\\LoanMate\\LoanMate\\images'
+
+        # Create the full file path
+        self.file_path = os.path.join(folder_path, f'{id}.jpg')
+        # Check if the file exists
+        if os.path.isfile(self.file_path):
+                self.label_4.setStyleSheet("QPushButton {\n"
+"    background-color: rgb(0,170,0);\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    border-left: 3px solid rgb(255, 85, 0);\n"
+"    border-right: 3px solid rgb(255, 85, 0);\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(25, 25, 25);\n"
+"}")
+                self.label_4.setText("View")
+        else:
+                self.label_4.setStyleSheet("QPushButton {\n"
+"    background-color: rgb(170,0,0);\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    border-left: 3px solid rgb(255, 85, 0);\n"
+"    border-right: 3px solid rgb(255, 85, 0);\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(25, 25, 25);\n"
+"}")
     
+    def open_image(self):
+        from PIL import Image
+        try:
+                id = int(self.user_id)
+                # Specify the path to the folder where your images are stored
+                folder_path = 'C:\\Users\\Jitendra Jain\\Downloads\\LoanMate\\LoanMate\\images'
+
+                # Create the full file path
+                file_path = os.path.join(folder_path, f'{id}.jpg')
+                img = Image.open(file_path)   
+                img.show()   
+        except Exception as ex:
+               print(ex)
+           
 #-----------------------------------Important Functionalities----------------------------------------
         ### 1. Function to add new record
         ### 2. Search record function for remove record
@@ -834,13 +918,14 @@ GROUP BY
                 self.call()
                 self.user_id = item.text()
                 mycursor = self.con.cursor()
-                query = f"SELECT fingerprint_data FROM fingerprint_table WHERE user_id = {self.user_id}"
+                """query = f"SELECT fingerprint_data FROM fingerprint_table WHERE user_id = {self.user_id}"
                 mycursor.execute(query)
                 data = mycursor.fetchone()
                 if str(data) == "None":
                        self.label_4.setStyleSheet("background-color: rgb(170,0,0);")
                 elif str(data) != "None":
-                       self.label_4.setStyleSheet("background-color: rgb(0,170,0);")
+                       self.label_4.setStyleSheet("background-color: rgb(0,170,0);")"""
+                self.check_image_exists(self.user_id)
                 query = "SELECT date FROM all_records WHERE user_id = %s"
                 values = (self.user_id,)
                 mycursor.execute(query, values)
@@ -953,7 +1038,18 @@ GROUP BY
                                         messagebox.showinfo("Success!","Data Removed")
                                         self.lineEdit_5.clear()
                                         self.lineEdit_6.clear()
-                                        self.label_4.setStyleSheet("background-color: rgb(18,18,18);")
+                                        self.label_4.setStyleSheet("QPushButton {\n"
+"    background-color: rgb(18,18,18);\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    border-left: 3px solid rgb(255, 85, 0);\n"
+"    border-right: 3px solid rgb(255, 85, 0);\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(25, 25, 25);\n"
+"}")
                                         self.tableWidget_exist_5.setRowCount(0)
                                 except mysql.connector.Error as error:
                                         messagebox.showerror("Error",f"{str(error)}")
@@ -981,7 +1077,18 @@ GROUP BY
                 mycursor.execute(query)
                 self.con.commit()
                 messagebox.showinfo("Success","Data deleted")
-                self.label_4.setStyleSheet("background-color: rgb(18,18,18);")
+                self.label_4.setStyleSheet("QPushButton {\n"
+"    background-color: rgb(18,18,18);\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    border-left: 3px solid rgb(255, 85, 0);\n"
+"    border-right: 3px solid rgb(255, 85, 0);\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(25, 25, 25);\n"
+"}")
                 self.lineEdit_5.clear()
                 self.lineEdit_6.clear()
                 self.tableWidget_exist_5.setRowCount(0)
@@ -3367,8 +3474,19 @@ FROM (
         self.frame_30.setObjectName("frame_30")
         self.horizontalLayout_25 = QtWidgets.QHBoxLayout(self.frame_30)
         self.horizontalLayout_25.setObjectName("horizontalLayout_25")
-        self.label_4 = QtWidgets.QLabel(self.frame_30)
-        self.label_4.setStyleSheet("background-color: rgb(18,18,18);")
+        self.label_4 = QtWidgets.QPushButton(self.frame_30)
+        self.label_4.setStyleSheet("QPushButton {\n"
+"    background-color: rgb(18,18,18);\n"
+"}\n"
+"\n"
+"QPushButton:hover {\n"
+"    border-left: 3px solid rgb(255, 85, 0);\n"
+"    border-right: 3px solid rgb(255, 85, 0);\n"
+"}\n"
+"\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(25, 25, 25);\n"
+"}")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.horizontalLayout_25.addWidget(self.label_4)
@@ -4599,9 +4717,10 @@ FROM (
         self.viewbtn.clicked.connect(self.view)
         self.removedbtn.clicked.connect(self.removed)
         self.accountsbtn.clicked.connect(self.accounts)
+        self.label_4.clicked.connect(self.open_image)
         self.pushButton.clicked.connect(self.close)
         self.pushButton_13.clicked.connect(self.addnew)
-        self.pushButton_14.clicked.connect(self.cap)
+        self.pushButton_14.clicked.connect(self.call_camera)
         self.pushButton_16.clicked.connect(self.search_remove)
         self.pushButton_17.clicked.connect(self.remove_record)
         self.pushButton_18.clicked.connect(self.search_deposit)
@@ -4821,5 +4940,5 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
-    MainWindow.showFullScreen()
+    MainWindow.show()
     sys.exit(app.exec_())
